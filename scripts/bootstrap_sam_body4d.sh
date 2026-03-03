@@ -53,6 +53,65 @@ clone_or_update_repo() {
   git pull --ff-only origin "$SAM_BODY4D_REF"
 }
 
+patch_upstream_sources() {
+  python - <<'PY'
+from pathlib import Path
+import os
+
+root = Path(os.environ["SAM_BODY4D_WORKDIR"])
+utils_path = root / "models" / "sam_3d_body" / "notebook" / "utils.py"
+app_path = root / "app.py"
+
+utils_txt = utils_path.read_text(encoding="utf-8")
+
+old_occ = """                # Get bounding box from mask contours
+                x, y, w, h = cv2.boundingRect(coords)
+                bbox = np.array([[x, y, x + w, y + h]], dtype=np.float32)
+                # print(f\"Computed bbox from mask: {bbox[0]}\")
+                _occ_bbox_list.append(bbox)
+"""
+new_occ = """                # Get bounding box from mask contours (safe for empty masks)
+                if coords is None:
+                    bbox = np.array([[0, 0, 1, 1]], dtype=np.float32)
+                else:
+                    x, y, w, h = cv2.boundingRect(coords)
+                    bbox = np.array([[x, y, x + w, y + h]], dtype=np.float32)
+                # print(f\"Computed bbox from mask: {bbox[0]}\")
+                _occ_bbox_list.append(bbox)
+"""
+
+old_no_occ = """                # Get bounding box from mask contours
+                x, y, w, h = cv2.boundingRect(coords)
+                bbox = np.array([[x, y, x + w, y + h]], dtype=np.float32)
+
+                # print(f\"Computed bbox from mask: {bbox[0]}\")
+                no_occ_bbox_list.append(bbox)
+"""
+new_no_occ = """                # Get bounding box from mask contours (safe for empty masks)
+                if coords is None:
+                    bbox = np.array([[0, 0, 1, 1]], dtype=np.float32)
+                else:
+                    x, y, w, h = cv2.boundingRect(coords)
+                    bbox = np.array([[x, y, x + w, y + h]], dtype=np.float32)
+
+                # print(f\"Computed bbox from mask: {bbox[0]}\")
+                no_occ_bbox_list.append(bbox)
+"""
+
+if old_occ in utils_txt:
+    utils_txt = utils_txt.replace(old_occ, new_occ, 1)
+if old_no_occ in utils_txt:
+    utils_txt = utils_txt.replace(old_no_occ, new_no_occ, 1)
+
+utils_path.write_text(utils_txt, encoding="utf-8")
+
+app_txt = app_path.read_text(encoding="utf-8")
+if "demo.launch(show_error=True)" not in app_txt:
+    app_txt = app_txt.replace("demo.launch()", "demo.launch(show_error=True)", 1)
+app_path.write_text(app_txt, encoding="utf-8")
+PY
+}
+
 install_python_deps() {
   cd "$SAM_BODY4D_WORKDIR"
 
@@ -128,6 +187,7 @@ launch_app() {
 main() {
   install_system_deps
   clone_or_update_repo
+  patch_upstream_sources
   install_python_deps
   setup_checkpoints
   launch_app
