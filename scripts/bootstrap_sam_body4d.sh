@@ -106,7 +106,7 @@ PY
 
 setup_checkpoints() {
   cd "$SAM_BODY4D_WORKDIR"
-  python scripts/setup.py --ckpt-root "$SAM_BODY4D_CKPT_ROOT" --no-force
+  python scripts/setup.py --ckpt-root "$SAM_BODY4D_CKPT_ROOT"
 
   local enable_val
   enable_val="false"
