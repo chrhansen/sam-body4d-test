@@ -2,6 +2,9 @@
 
 Deploy helper for running `gaomingqi/sam-body4d` on a RunPod GPU pod.
 
+Default pod image:
+- `runpod/pytorch:1.0.3-cu1281-torch271-ubuntu2204` (avoids CUDA 12.9 driver mismatch on some hosts)
+
 ## What this does
 
 - Creates one new RunPod pod for this demo.
