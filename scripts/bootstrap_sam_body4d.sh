@@ -106,6 +106,84 @@ if old_no_occ in utils_txt:
 utils_path.write_text(utils_txt, encoding="utf-8")
 
 app_txt = app_path.read_text(encoding="utf-8")
+
+if "import zipfile" not in app_txt:
+    app_txt = app_txt.replace("import time\n", "import time\nimport zipfile\n", 1)
+
+if "def on_download_3d_models():" not in app_txt:
+    helper = """def on_download_3d_models():
+    \"\"\"Package exported 3D meshes (all frames) into a single ZIP.\"\"\"
+    mesh_root = os.path.join(OUTPUT_DIR, "mesh_4d_individual")
+    focal_root = os.path.join(OUTPUT_DIR, "focal_4d_individual")
+
+    if not os.path.isdir(mesh_root):
+        raise gr.Error("No mesh export folder found. Run 4D Generation first.")
+
+    has_ply = False
+    for dirpath, _, filenames in os.walk(mesh_root):
+        if any(name.endswith(".ply") for name in filenames):
+            has_ply = True
+            break
+    if not has_ply:
+        raise gr.Error("No .ply files found yet. Run 4D Generation first.")
+
+    archive_path = os.path.join(OUTPUT_DIR, f"mesh_4d_{time.time():.0f}.zip")
+    with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for folder in [mesh_root, focal_root]:
+            if not os.path.isdir(folder):
+                continue
+            for dirpath, _, filenames in os.walk(folder):
+                for name in filenames:
+                    full = os.path.join(dirpath, name)
+                    rel = os.path.relpath(full, OUTPUT_DIR)
+                    zf.write(full, rel)
+
+    RUNTIME["mesh_archive_path"] = archive_path
+    return archive_path
+
+"""
+    marker = """on_mask_generation = gpu_profile(on_mask_generation)
+on_4d_generation   = gpu_profile(on_4d_generation)
+"""
+    if marker in app_txt:
+        app_txt = app_txt.replace(marker, helper + marker, 1)
+
+ui_old = """            with gr.Row():
+                mask_gen_btn = gr.Button("Mask Generation")
+                gen4d_btn = gr.Button("4D Generation")
+            fourd_display = gr.Video(label="4D Result")
+"""
+ui_new = """            with gr.Row():
+                mask_gen_btn = gr.Button("Mask Generation")
+                gen4d_btn = gr.Button("4D Generation")
+                download_models_btn = gr.Button("Download 3D Models")
+            fourd_display = gr.Video(label="4D Result")
+            models_archive_file = gr.File(label="3D Models (.zip)")
+"""
+if "download_models_btn = gr.Button(\"Download 3D Models\")" not in app_txt and ui_old in app_txt:
+    app_txt = app_txt.replace(ui_old, ui_new, 1)
+
+evt_old = """    gen4d_btn.click(
+        fn=on_4d_generation,
+        inputs=[video_state],      
+        outputs=[fourd_display],  
+    )
+"""
+evt_new = """    gen4d_btn.click(
+        fn=on_4d_generation,
+        inputs=[video_state],      
+        outputs=[fourd_display],  
+    )
+
+    download_models_btn.click(
+        fn=on_download_3d_models,
+        inputs=None,
+        outputs=[models_archive_file],
+    )
+"""
+if "download_models_btn.click(" not in app_txt and evt_old in app_txt:
+    app_txt = app_txt.replace(evt_old, evt_new, 1)
+
 if "demo.launch(show_error=True)" not in app_txt:
     app_txt = app_txt.replace("demo.launch()", "demo.launch(show_error=True)", 1)
 app_path.write_text(app_txt, encoding="utf-8")
