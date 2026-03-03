@@ -16,8 +16,8 @@ from urllib.request import Request, urlopen
 
 API_BASE = "https://rest.runpod.io/v1"
 LAST_POD_ID_PATH = Path(__file__).resolve().parents[1] / ".runpod_pod_id"
-# Use CUDA 12.8 image for broader host-driver compatibility on RunPod.
-DEFAULT_IMAGE = "runpod/pytorch:1.0.3-cu1281-torch271-ubuntu2204"
+# Known-good image from working pod; avoids newer-driver CUDA mismatches.
+DEFAULT_IMAGE = "runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04"
 DEFAULT_GPU_TYPES = [
     "NVIDIA RTX A6000",
     "NVIDIA A40",
