@@ -56,6 +56,7 @@ clone_or_update_repo() {
 install_python_deps() {
   cd "$SAM_BODY4D_WORKDIR"
 
+  python --version
   python -m pip install --upgrade pip setuptools wheel
 
   if ! python - <<'PY'
@@ -74,8 +75,32 @@ PY
       --index-url https://download.pytorch.org/whl/cu118
   fi
 
-  python -m pip install --no-cache-dir --ignore-requires-python -e models/sam3
-  python -m pip install --no-cache-dir --ignore-requires-python -e .
+  python -m pip install --no-cache-dir -e models/sam3
+
+  # Install app runtime deps directly to avoid python-version gates on project metadata.
+  python -m pip install --no-cache-dir \
+    "gradio~=6.0.0" \
+    "opencv-python~=4.12.0.88" \
+    "einops~=0.8.1" \
+    "decord~=0.6.0" \
+    "pycocotools~=2.0.10" \
+    "psutil~=7.1.3" \
+    "braceexpand~=0.1.7" \
+    "roma~=1.5.4" \
+    "omegaconf~=2.3.0" \
+    "pytorch_lightning" \
+    "yacs~=0.1.8" \
+    "matplotlib~=3.10.7" \
+    "cloudpickle~=3.1.2" \
+    "fvcore~=0.1.5.post20221221" \
+    "pyrender~=0.1.45" \
+    "termcolor~=3.2.0" \
+    "diffusers==0.29.1" \
+    "transformers~=4.57.3" \
+    "accelerate~=1.12.0" \
+    "imageio[ffmpeg]" \
+    "scipy<1.17" \
+    "MoGe @ git+https://github.com/microsoft/MoGe.git"
 }
 
 setup_checkpoints() {

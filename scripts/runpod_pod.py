@@ -186,8 +186,15 @@ def create_command(args: argparse.Namespace) -> None:
 
     start_cmd = (
         "set -euo pipefail; "
+        "mkdir -p /workspace; "
         f"curl -fsSL {args.bootstrap_url} -o /tmp/bootstrap_sam_body4d.sh; "
-        "bash /tmp/bootstrap_sam_body4d.sh"
+        "chmod +x /tmp/bootstrap_sam_body4d.sh; "
+        "if bash /tmp/bootstrap_sam_body4d.sh > /workspace/bootstrap.log 2>&1; then "
+        "  echo 'bootstrap finished'; "
+        "else "
+        "  echo 'bootstrap failed; serving /workspace on :7860'; "
+        "  python -m http.server 7860 --directory /workspace; "
+        "fi"
     )
 
     payload: dict[str, Any] = {
