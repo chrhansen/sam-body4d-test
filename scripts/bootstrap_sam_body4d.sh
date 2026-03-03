@@ -27,11 +27,11 @@ install_system_deps() {
   if [ "$(id -u)" -eq 0 ]; then
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      git ffmpeg libgl1 libglib2.0-0
+      git ffmpeg libgl1 libglib2.0-0 libegl1 libglvnd0
   elif command -v sudo >/dev/null 2>&1; then
     sudo apt-get update
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      git ffmpeg libgl1 libglib2.0-0
+      git ffmpeg libgl1 libglib2.0-0 libegl1 libglvnd0
   fi
 }
 
@@ -78,9 +78,10 @@ PY
   python -m pip install --no-cache-dir -e models/sam3
 
   # Install app runtime deps directly to avoid python-version gates on project metadata.
+  python -m pip install --no-cache-dir "numpy==1.26.0"
   python -m pip install --no-cache-dir \
     "gradio~=6.0.0" \
-    "opencv-python~=4.12.0.88" \
+    "opencv-python==4.11.0.86" \
     "einops~=0.8.1" \
     "decord~=0.6.0" \
     "pycocotools~=2.0.10" \
