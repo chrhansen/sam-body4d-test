@@ -1,0 +1,4 @@
+.env
+.runpod_pod_id
+__pycache__/
+*.pyc
