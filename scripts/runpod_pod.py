@@ -189,7 +189,7 @@ def create_command(args: argparse.Namespace) -> None:
         "mkdir -p /workspace; "
         f"curl -fsSL {args.bootstrap_url} -o /tmp/bootstrap_sam_body4d.sh; "
         "chmod +x /tmp/bootstrap_sam_body4d.sh; "
-        "if bash /tmp/bootstrap_sam_body4d.sh > /workspace/bootstrap.log 2>&1; then "
+        "if bash /tmp/bootstrap_sam_body4d.sh 2>&1 | tee /workspace/bootstrap.log; then "
         "  echo 'bootstrap finished'; "
         "else "
         "  echo 'bootstrap failed; serving /workspace on :7860'; "

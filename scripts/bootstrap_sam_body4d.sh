@@ -181,7 +181,7 @@ launch_app() {
   cd "$SAM_BODY4D_WORKDIR"
   export GRADIO_SERVER_NAME
   export GRADIO_SERVER_PORT
-  exec python app.py
+  exec python -u app.py
 }
 
 main() {
